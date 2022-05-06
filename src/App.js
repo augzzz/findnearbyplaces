@@ -1,25 +1,87 @@
-import logo from './logo.svg';
-import './App.css';
+import { HashRouter, Routes, Route, useParams } from 'react-router-dom';
+import Home from './components/Home';
+import Login from './components/Login';
+import Container from 'react-bootstrap/Container';
+import Row from 'react-bootstrap/Row';
+import Col from 'react-bootstrap/Col';
+import Header from './components/Header';
+import Footer from './components/Footer';
+import Menu from './components/Menu';
+import { Navigate } from 'react-router-dom';
+import { useState } from 'react';
+import Register from './components/Register';
+import Places from './components/Places';
+
 
 function App() {
+  const [customer, setCustomer] = useState(localStorage.getItem('customer'));
+
+  let customerLoggedInHandler = (customerEmail) => {
+    localStorage.setItem('customer', customerEmail);
+    setCustomer(customerEmail);
+  };
+
+  let customerLoggedOutHandler = () => {
+    localStorage.removeItem('customer');
+    setCustomer(undefined);
+  }
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <HashRouter>
+      <Container fluid>
+
+        <Row>
+          <Col>
+            <Header />
+          </Col>
+        </Row>
+
+        <Row>
+          <Col>
+            <Menu customer={customer} customerLoggedOut={customerLoggedOutHandler} />
+          </Col>
+        </Row>
+
+        <Routes>
+          
+          <Route exact path='/' element={<Home />}>
+          </Route>
+
+          <Route exact path='/register' element={<Register />}>
+          </Route>
+
+          <Route exact path='/login' element={<Login customerLoggedIn={customerLoggedInHandler} />}>
+          </Route>
+
+          <Route exact path='/login/:from' element={<Login customerLoggedIn={customerLoggedInHandler} />}>
+          </Route>
+
+          <Route exact path='/places' element={
+            <ProtectedRoute customer={customer}> <Places /></ProtectedRoute>
+          } >
+          </Route>
+
+        </Routes>
+
+        <Row>
+          <Col>
+            <Footer />
+          </Col>
+        </Row>
+
+      </Container>
+    </HashRouter>
   );
+}
+
+const ProtectedRoute = ({ customer, children }) => {
+  const { id } = useParams();
+
+  if (customer) {
+    return children;
+  } else {
+    return <Navigate to={`/login/${id}`} />;
+  }
 }
 
 export default App;
